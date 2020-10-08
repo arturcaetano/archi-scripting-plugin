@@ -230,31 +230,8 @@ public class ArchimateRelationshipProxy extends ArchimateConceptProxy implements
         
         // Update all diagram connections
         for(EObjectProxy proxy : objectRefs()) {
-            IDiagramModelArchimateConnection dmc = (IDiagramModelArchimateConnection)proxy.getEObject();
-
-            CommandHandler.executeCommand(new ScriptCommand("type", getArchimateModel()) { //$NON-NLS-1$
-                @Override
-                public void perform() {
-                    // Safety to deregister listeners on the concept and update the UI
-                    dmc.disconnect();
-                    
-                    dmc.setArchimateRelationship(newRelationship);
-                    
-                    // Reconnect and update UI
-                    dmc.reconnect();
-                }
-
-                @Override
-                public void undo() {
-                    // Safety to deregister listeners on the concept and update the UI
-                    dmc.disconnect();
-                    
-                    dmc.setArchimateConcept(oldProxy.getEObject());
-                    
-                    // Reconnect and update UI
-                    dmc.reconnect();
-                }
-            });
+            CommandHandler.executeCommand(new SetRelationshipOnDiagramModelConnectionCommand(newRelationship,
+                    (IDiagramModelArchimateConnection)proxy.getEObject()));
         }
 
         // Set this eObject
@@ -287,12 +264,20 @@ public class ArchimateRelationshipProxy extends ArchimateConceptProxy implements
      * @return this
      */
     public ArchimateRelationshipProxy merge(ArchimateRelationshipProxy other) {
+        IArchimateRelationship thisRelationship = getEObject();
+        IArchimateRelationship otherRelationship = other.getEObject();
+        
         // Check this and the other are in the same model
-        ModelUtil.checkComponentsInSameModel(getEObject(), other.getEObject());
+        ModelUtil.checkComponentsInSameModel(thisRelationship, otherRelationship);
         
         // Check the other is of the same type IArchimateRelationship
-        if(other.getEObject().getClass() != getEObject().getClass()) {
-            throw new ArchiScriptException(NLS.bind("{0} is not the same type of ArchiMate relationship!", other));
+        if(thisRelationship.getClass() != otherRelationship.getClass()) {
+            throw new ArchiScriptException(NLS.bind(Messages.ArchimateRelationshipProxy_2, other));
+        }
+        
+        // Check that source and targets are the same
+        if(thisRelationship.getSource() != otherRelationship.getSource() || thisRelationship.getTarget() != otherRelationship.getTarget()) {
+            throw new ArchiScriptException(Messages.ArchimateRelationshipProxy_3);
         }
 
         // Append Documentation from the other relationship
@@ -305,7 +290,7 @@ public class ArchimateRelationshipProxy extends ArchimateConceptProxy implements
 
         // Set all diagram connections to this relationship
         for(EObjectProxy dmoProxy : other.objectRefs()) {
-            CommandHandler.executeCommand(new SetRelationshipOnDiagramModelConnectionCommand(getEObject(),
+            CommandHandler.executeCommand(new SetRelationshipOnDiagramModelConnectionCommand(thisRelationship,
                     (IDiagramModelArchimateConnection)dmoProxy.getEObject()));
         }
         

@@ -15,7 +15,7 @@ import com.archimatetool.model.IDiagramModelArchimateConnection;
  */
 public class SetRelationshipOnDiagramModelConnectionCommand extends ScriptCommand {
    
-    private IArchimateRelationship relationship;
+    private IArchimateRelationship newRelationship;
     private IDiagramModelArchimateConnection dmc;
     private IArchimateRelationship oldRelationship;
     
@@ -23,10 +23,10 @@ public class SetRelationshipOnDiagramModelConnectionCommand extends ScriptComman
      * @param relationship The relationship to set on the dmc
      * @param dmc The dmo to set the relationship on
      */
-    public SetRelationshipOnDiagramModelConnectionCommand(IArchimateRelationship relationship, IDiagramModelArchimateConnection dmc) {
-        super("setRelationship", relationship.getArchimateModel()); //$NON-NLS-1$
+    public SetRelationshipOnDiagramModelConnectionCommand(IArchimateRelationship newRelationship, IDiagramModelArchimateConnection dmc) {
+        super("setRelationship", newRelationship.getArchimateModel()); //$NON-NLS-1$
         
-        this.relationship = relationship;
+        this.newRelationship = newRelationship;
         this.dmc = dmc;
         oldRelationship = dmc.getArchimateRelationship();
     }
@@ -37,7 +37,7 @@ public class SetRelationshipOnDiagramModelConnectionCommand extends ScriptComman
         dmc.disconnect();
         
         // Set it
-        dmc.setArchimateRelationship(relationship);
+        dmc.setArchimateRelationship(newRelationship);
      
         // Reconnect and update UI
         dmc.reconnect();
@@ -57,7 +57,7 @@ public class SetRelationshipOnDiagramModelConnectionCommand extends ScriptComman
 
     @Override
     public void dispose() {
-        relationship = null;
+        newRelationship = null;
         dmc = null;
         oldRelationship = null;
     }
