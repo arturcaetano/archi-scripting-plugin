@@ -8,6 +8,7 @@ package com.archimatetool.script.views.scripts;
 import java.io.File;
 
 import org.eclipse.jface.action.Action;
+import org.eclipse.swt.widgets.Text;
 
 import com.archimatetool.script.IArchiScriptImages;
 import com.archimatetool.script.RunArchiScript;
@@ -20,22 +21,32 @@ import com.archimatetool.script.ScriptFiles;
 public class RunScriptAction extends Action {
 
     private File fFile;
+    private Text fScriptText;
 
-    public RunScriptAction() {
+    public RunScriptAction(Text scriptText) {
         setImageDescriptor(IArchiScriptImages.ImageFactory.getImageDescriptor(IArchiScriptImages.ICON_RUN));
         setText(Messages.RunScriptAction_0);
         setToolTipText(Messages.RunScriptAction_1);
+        fScriptText = scriptText;
     }
     
     public void setFile(File file) {
         fFile = file;
         setEnabled(ScriptFiles.isScriptFile(file));
     }
-
+    
     @Override
     public void run() {
         if(isEnabled()) {
-            RunArchiScript runner = new RunArchiScript(fFile);
+            RunArchiScript runner;
+            
+            if(fScriptText.isFocusControl()) {
+                runner = new RunArchiScript(fScriptText.getText());
+            }
+            else {
+                runner = new RunArchiScript(fFile);
+            }
+            
             runner.run();
         }
     }

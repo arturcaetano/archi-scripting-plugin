@@ -31,14 +31,27 @@ import com.archimatetool.script.views.console.ConsoleOutput;
  */
 public class RunArchiScript {
 	private File file;
+	private String script;
 
 	public RunArchiScript(File file) {
 		this.file = file;
 	}
 	
+	public RunArchiScript(String script) {
+	    this.script = script;
+	}
+	
 	public void run() {
+	    IScriptEngineProvider provider;
+	    
         // Get the provider for this file type
-	    IScriptEngineProvider provider = IScriptEngineProvider.INSTANCE.getProviderForFile(file);
+	    if(file != null) {
+	        provider = IScriptEngineProvider.INSTANCE.getProviderForFile(file);
+	    }
+	    else {
+	        // TODO get a suitable provider for the current language
+	        provider = IScriptEngineProvider.INSTANCE.getProviderByID(JSProvider.ID);
+	    }
         
 	    if(provider == null) {
 	        throw new RuntimeException(NLS.bind("Script Provider not found for file: {0}", file)); //$NON-NLS-1$
@@ -60,11 +73,16 @@ public class RunArchiScript {
         RefreshUIHandler.init();
 
         try {
-            if(ScriptFiles.isLinkedFile(file)) {
-                file = ScriptFiles.resolveLinkFile(file);
+            if(file != null) {
+                if(ScriptFiles.isLinkedFile(file)) {
+                    file = ScriptFiles.resolveLinkFile(file);
+                }
+                provider.run(file, engine);
             }
-            provider.run(file, engine);
-        }
+            else {
+                provider.run(script, engine);
+            }
+         }
         catch(Throwable ex) {
             error(ex);
         }
@@ -74,7 +92,7 @@ public class RunArchiScript {
             RefreshUIHandler.finalise();
             
             // Add Commands to UI
-            CommandHandler.finalise(FileUtils.getFileNameWithoutExtension(file));
+            CommandHandler.finalise(file != null ? FileUtils.getFileNameWithoutExtension(file) : "Local Script"); //$NON-NLS-1$
         }
 	}
 	
